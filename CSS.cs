@@ -5,27 +5,81 @@ using System.Text;
 
 namespace WebSharp {
 	public class PassonStylesheet {
-		protected Dictionary<Styleset, Tuple<string, HashSet<string>>> setDict;
+		protected Dictionary<Styleset, string> setDict;
+		protected Dictionary<AttributeStyleset, string> aDict;
 		public PassonStylesheet () {
-			setDict = new Dictionary<Styleset, Tuple<string, HashSet<string>>> ();
+			setDict = new Dictionary<Styleset, string> ();
+			aDict = new Dictionary<AttributeStyleset, string> ();
 		}
-		public string this[Styleset sset, string elementtype] {
+		public string this[Styleset sset] {
 			get {
 				if (!setDict.ContainsKey(sset)) {
-					setDict [sset] = new Tuple<string, HashSet<string>> (setDict.Count.ToString("X") + sset.GetHashCode().ToString("X4"), new HashSet<string>());
+					setDict [sset] = "C" + setDict.Count.ToString("X");
 				}
-				setDict [sset].Item2.Add (elementtype);
-				return setDict [sset].Item1;
+				return setDict [sset];
+			}
+		}
+		public string this[Styleset link, Styleset visited, Styleset hover, Styleset active] {
+			get {
+				return this[new AttributeStyleset(link, visited, hover, active)];
+			}
+		}
+		public string this[AttributeStyleset aset] {
+			get {
+				if (!aDict.ContainsKey(aset)) {
+					aDict [aset] = "A" + aDict.Count.ToString("X");
+				}
+				return aDict [aset];
 			}
 		}
 		public List<string> GetFormattedSheet () {
 			List<string> sheet = new List<string> ();
-			foreach (KeyValuePair<Styleset, Tuple<string, HashSet<string>>> KVP in setDict) {
-				foreach (string type in KVP.Value.Item2) {
-					sheet.Add (String.Format("{0}.{1} {{{2}}}", type, KVP.Value.Item1, KVP.Key.ToString()));
-				}
+			foreach(KeyValuePair<AttributeStyleset, string> KVP in aDict) {
+				if (KVP.Key.Link != null)
+					sheet.Add (String.Format("a.{0}:link {{{1}}}", KVP.Value, KVP.Key.Link.ToString()));
+				if (KVP.Key.Visited != null)
+					sheet.Add (String.Format("a.{0}:visited {{{1}}}", KVP.Value, KVP.Key.Visited.ToString()));
+				if (KVP.Key.Hover != null)
+					sheet.Add (String.Format("a.{0}:hover {{{1}}}", KVP.Value, KVP.Key.Hover.ToString()));
+				if (KVP.Key.Active != null)
+					sheet.Add (String.Format("a.{0}:active {{{1}}}", KVP.Value, KVP.Key.Active.ToString()));
+			}
+			foreach (KeyValuePair<Styleset, string> KVP in setDict) {
+				sheet.Add (String.Format(".{0} {{{1}}}", KVP.Value, KVP.Key.ToString()));
 			}
 			return sheet;
+		}
+	}
+	public class AttributeStyleset {
+		public Styleset Link;
+		public Styleset Visited;
+		public Styleset Hover;
+		public Styleset Active;
+		public AttributeStyleset(Styleset link, Styleset visited, Styleset hover, Styleset active) {
+			this.Link = link;
+			this.Visited = visited;
+			this.Hover = hover;
+			this.Active = active;
+		}
+		public override int GetHashCode () {
+			int hc = 0;
+			if (Link != null)
+				hc += Link.GetHashCode ();
+			if (Visited != null)
+				hc += Visited.GetHashCode ();
+			if (Hover != null)
+				hc += Hover.GetHashCode ();
+			if (Active != null)
+				hc += Active.GetHashCode ();
+			return hc;
+		}
+		public override bool Equals (object obj) {
+			if (obj == null)
+				return false;
+			AttributeStyleset aset = obj as AttributeStyleset;
+			if (aset == null)
+				return false;
+			return (this.Link == aset.Link && this.Visited == aset.Visited && this.Hover == aset.Hover && this.Active == aset.Active);
 		}
 	}
 	public class Styleset : Dictionary<string, string> {
@@ -56,7 +110,7 @@ namespace WebSharp {
 			return true;
 		}
 		public override string ToString () {
-			return String.Join ("",this.Select((k, v) => String.Format("{0}:{1};", k, v)));
+			return String.Join ("",this.Select((k) => String.Format("{0}:{1};", k.Key, k.Value)));
 		}
 	}
 	public class Style : IComparable {
@@ -98,6 +152,11 @@ namespace WebSharp {
 		public static implicit operator Style(KeyValuePair<string, string> KVP) {
 			return new Style (KVP.Key, KVP.Value);
 		}
+		//BEGIN STANDARD STYLES
+		public static Style BackgroundColor(byte r, byte g, byte b) {return new Style ("background-color", String.Format("#{0:X2}{1:X2}{2:X2}", r,g,b));}
+		public static Style BackgroundColor(string hex) {return new Style ("background-color", hex.StartsWith("#") ? hex : "#" + hex);}
+		public static Style Color(byte r, byte g, byte b) {return new Style ("color", String.Format("#{0:X2}{1:X2}{2:X2}", r,g,b));}
+		public static Style Color(string hex) {return new Style ("color", hex.StartsWith("#") ? hex : "#" + hex);}
 	}
 }
 
