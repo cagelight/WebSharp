@@ -14,6 +14,13 @@ namespace WebSharp {
 			Format = format;
 			Extensions = extensions;
 		}
+		public string GetExtension() {
+			if (this.Extensions.Length > 0) {
+				return this.Extensions [0];
+			} else {
+				return "dat";
+			}
+		}
 		public override string ToString() {
 			return String.Format ("{0}/{1}", Type, Format);
 		}
@@ -22,6 +29,13 @@ namespace WebSharp {
 		}
 		public static MIME FromText(string text) {
 			return Manager.FromText (text);
+		}
+		public static MIME FromText(string text, out string boundary) {
+			string[] smime = text.Split (new string[] {"; "}, StringSplitOptions.None);
+			if (smime.Length < 2 || !smime [1].StartsWith("boundary="))
+				boundary = String.Empty;
+			boundary = smime[1].Split(new char[] {'='})[1];
+			return Manager.FromText (smime[0]);
 		}
 		public static MIME OctetStream = new MIME ("application", "octet-stream", "exe", "bin");
 		public static MIME FormData = new MIME ("application", "x-www-form-urlencoded");
@@ -32,6 +46,18 @@ namespace WebSharp {
 		public static MIME HTML = new MIME ("text", "html", "htm", "html");
 		public static MIME Plaintext = new MIME ("text", "plain", "txt");
 		private static readonly MIMEManager Manager = new MIMEManager();
+
+		public override int GetHashCode () {
+			return (Type + Format).GetHashCode ();
+		}
+		public override bool Equals (object obj) {
+			if (obj == null)
+				return false;
+			MIME M = obj as MIME;
+			if (M == null)
+				return false;
+			return (M.Type == this.Type && M.Format == this.Format);
+		}
 	}
 
 	internal class MIMEManager {
@@ -47,8 +73,13 @@ namespace WebSharp {
 			}
 		}
 		internal MIME FromText (string text) {
+			MIME r;
+			if (TextDict.TryGetValue(text, out r))
+				return r;
 			try {
-				return TextDict[text];
+				string[] demime = text.Split(new char[] {'/'});
+				r = new MIME(demime[0], demime[1]);
+				return r;
 			} catch {
 				return MIME.OctetStream;
 			}
