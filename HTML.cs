@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 namespace WebSharp {
 	//BEGIN INTERFACE
@@ -124,10 +125,10 @@ namespace WebSharp {
 			this.Text = text;
 		}
 		public virtual string ToWebOptimizedString(PassonStylesheet PS) {
-			return String.Format ("<{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.GetPassonText(PS), this.Text);
+			return String.Format ("<{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.GetPassonText(PS), HttpUtility.HtmlEncode(this.Text));
 		}
 		public override string ToString () {
-			return String.Format ("<{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.ToString(), this.Text);
+			return String.Format ("<{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.ToString(), HttpUtility.HtmlEncode(this.Text));
 		}
 	}
 	public class ElementContainer : List<IElement>, IElement {
@@ -210,20 +211,22 @@ namespace WebSharp {
 		//END CONTAINERS BEGIN STRUCTURES
 	}
 
-	public class Webpage : ElementContainer {
+	public class Webpage {
 		public string HTitle;
-		public Webpage(string title, params IElement[] contents) : base("body", contents) {
+		public ElementContainer Body;
+		public Webpage(string title, params IElement[] contents) {
 			this.HTitle = title;
+			this.Body = new ElementContainer("body", contents);
 		}
-		public string ToWebOptimizedString() {
-			PassonStylesheet PS = new PassonStylesheet ();
-			return String.Format ("<{3}>{4}{5}</{3}><{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.GetPassonText(PS), String.Join("", this.Select((e) => e.ToWebOptimizedString(PS))), "head", String.Format("<title>{0}</title>", this.HTitle), String.Format("<style type=\"text/css\">{0}</style>", String.Join ("", PS.GetFormattedSheet ())));
+		public void Add (IElement element) {
+			Body.Add (element);
 		}
-		public override string ToWebOptimizedString(PassonStylesheet PS) {
-			return String.Format ("<{3}>{4}</{3}><{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.GetPassonText(PS), String.Join("", this.Select((e) => e.ToWebOptimizedString(PS))), "head", String.Format("<title>{0}</title>", this.HTitle));
+		public void Add (params IElement[] elements) {
+			Body.AddRange (elements);
 		}
 		public override string ToString () {
-			return String.Format ("<{3}>{4}</{3}><{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.ToString(), String.Join("", this), "head", String.Format("<title>{0}</title>", this.HTitle));
+			PassonStylesheet PS = new PassonStylesheet ();
+			return String.Format ("<{3}>{4}{5}</{3}><{0}{1}>{2}</{0}>", Body.ElementName, Body.Attributes.GetPassonText(PS), String.Join("", Body.Select((e) => e.ToWebOptimizedString(PS))), "head", String.Format("<title>{0}</title>", this.HTitle), String.Format("<style type=\"text/css\">{0}</style>", String.Join ("\n", PS.GetFormattedSheet ())));
 		}
 	}
 	//END STRUCTURES
