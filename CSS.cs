@@ -88,6 +88,11 @@ namespace WebSharp {
 				this [S.property] = S.value;
 			}
 		}
+		public void AddRange(IEnumerable<Style> i) {
+			foreach(Style S in i) {
+				this [S.property] = S.value;
+			}
+		}
 		public override int GetHashCode () {
 			string t = String.Empty;
 			foreach(Style S in this) {
@@ -111,6 +116,12 @@ namespace WebSharp {
 		}
 		public override string ToString () {
 			return String.Join ("",this.Select((k) => String.Format("{0}:{1};", k.Key, k.Value)));
+		}
+		public static Styleset operator +(Styleset A, Styleset B) {
+			Styleset C = new Styleset ();
+			C.AddRange (A.Select(x => new Style(x.Key, x.Value)));
+			C.AddRange (B.Select(x => new Style(x.Key, x.Value)));
+			return C;
 		}
 	}
 	public class Style : IComparable {
@@ -159,10 +170,11 @@ namespace WebSharp {
 		public static Style BackgroundColor(string hex) {return new Style ("background-color", hex.StartsWith("#") ? hex : "#" + hex);}
 		public static Style BackgroundImage(string urlpath) {return new Style ("background-image", String.Format("url({0})", urlpath));}
 		public static Style BackgroundPosition(string value) {return new Style ("background-position", value);}
-		public static Style BackgroundRepeat(Repeat value) {return new Style ("background-position", RepeatDict[value]);}
-		public static Style BackgroundRepeat() {return new Style ("background-position", "inherit");}
+		public static Style BackgroundRepeat(Repeat value) {return new Style ("background-repeat", RepeatDict[value]);}
+		public static Style BackgroundRepeat() {return new Style ("background-repeat", "inherit");}
 		//BORDER AND OUTLINE
 		public static Style Border(int widthpx, Border s, Hexcolor c) {return new Style ("border", String.Format("{0}px {1} {2}", widthpx, s.ToString().ToLower(), c.ToString()));}
+		public static Style BorderRadius(int pxrad) {return new Style ("border-radius", pxrad+"px");}
 		public static Style BoxShadow(int xpx, int ypx, Hexcolor color, int blur = 0, int spread = 0, bool inset = false) {return new Style ("box-shadow", String.Format("{0}px {1}px{3}{4} {2}{5}", xpx, ypx, color.ToString(), blur!=0?" "+blur:String.Empty, spread!=0?" "+spread:String.Empty, inset?" inset":String.Empty));}
 		//DIMENSION
 		public static Style Width(int px) {return new Style ("width", px+"px");}
@@ -221,8 +233,15 @@ namespace WebSharp {
 		public static Style Left(int px) {return new Style ("left", px+"px");}
 		public static Style Right(int px) {return new Style ("right", px+"px");}
 		public static Style Top(int px) {return new Style ("top", px+"px");}
+		public static Style Bottom(string value) {return new Style ("bottom", value);}
+		public static Style Left(string value) {return new Style ("left", value);}
+		public static Style Right(string value) {return new Style ("right", value);}
+		public static Style Top(string value) {return new Style ("top", value);}
+		public static Style Float(Float OS) {return new Style ("float", OS.ToString().ToLower());}
 		public static Style Overflow(Overflow OS) {return new Style ("overflow", OS.ToString().ToLower());}
 		public static Style Position(Position PS) {return new Style ("position", PS.ToString().ToLower());}
+		public static Style Display(Display value) {return new Style ("display", DisplayDict[value]);}
+		public static Style VerticalAlign(string value) {return new Style ("v", value);}
 		//TEXT
 		public static Style Color(byte r, byte g, byte b) {return new Style ("color", new Hexcolor(r, g, b).ToString());}
 		public static Style Color(Hexcolor color) {return new Style ("color", color.ToString());}
@@ -231,13 +250,34 @@ namespace WebSharp {
 		public static Style TextDecoration(string value) {return new Style ("text-decoration", value);}
 		//BEGIN STATIC STYLE HELPERS
 		internal static Dictionary<Repeat, string> RepeatDict = new Dictionary<Repeat, string>() {{Repeat.XY, "repeat"}, {Repeat.X, "repeat-x"}, {Repeat.Y, "repeat-y"}, {Repeat.None, "no-repeat"}};
+		internal static Dictionary<Display, string> DisplayDict = new Dictionary<Display, string>() {
+			{WebSharp.Display.Inline, "inline"},
+			{WebSharp.Display.Block, "block"}, 
+			{WebSharp.Display.InlineBlock, "inline-block"}, 
+			{WebSharp.Display.InlineTable, "inline-table"}, 
+			{WebSharp.Display.ListItem, "list-item"}, 
+			{WebSharp.Display.RunIn, "run-in"}, 
+			{WebSharp.Display.Table, "table"}, 
+			{WebSharp.Display.TableCaption, "table-caption"}, 
+			{WebSharp.Display.TableColumnGroup, "table-column-group"}, 
+			{WebSharp.Display.TableHeaderGroup, "table-header-group"}, 
+			{WebSharp.Display.TableFooterGroup, "table-footer-group"}, 
+			{WebSharp.Display.TableRowGroup, "table-row-group"}, 
+			{WebSharp.Display.TableCell, "table-cell"}, 
+			{WebSharp.Display.TableColumn, "table-column"}, 
+			{WebSharp.Display.TableRow, "table-row"}, 
+			{WebSharp.Display.None, "none"}, 
+			{WebSharp.Display.Inherit, "inherit"}, 
+		};
 	}
 	public enum Repeat { XY, X, Y, None }
 	public enum Border {None, Hidden, Dotted, Dashed, Solid, Double, Groove, Ridge, Inset, Outset, Inherit}
 	public enum Overflow {Visible, Hidden, Scroll, Auto, Inherit}
 	public enum Position {Static, Absolute, Fixed, Relative, Inherit}
 	public enum Weight {Lighter, Normal, Bold, Bolder, Inherit}
+	public enum Float {Left, Right, None, Inherit}
 	public enum TextAlignment {Left, Center, Right, Justify, Inherit}
+	public enum Display {Inline, Block, InlineBlock, InlineTable, ListItem, RunIn, Table, TableCaption, TableColumnGroup, TableHeaderGroup, TableFooterGroup, TableRowGroup, TableCell, TableColumn, TableRow, None, Inherit}
 	public struct Hexcolor {
 		public byte R;
 		public byte G;

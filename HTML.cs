@@ -10,38 +10,42 @@ namespace WebSharp {
 		string ToWebOptimizedString (PassonStylesheet PS); //Web Optimized ToString()
 	}
 	//END INTERFACE BEGIN ATTRIBUTESET
+	public enum ButtonT {Button, Reset, Submit}
+	public enum InputT {Text, Password, Radio, Checkbox, Submit, File, Hidden}
+	public enum FormMethodT {GET, POST}
 	public class AttributeSet {
-		public enum InputType {Text, Password, Radio, Checkbox, Submit, File}
-		public enum FormMethod {GET, POST}
 		protected Dictionary<string, string> attributes = new Dictionary<string, string>();
-		public Styleset Styleset;
+		public List<Styleset> Stylesets = new List<Styleset>();
 		public List<Style> Styles = new List<Style>();
 		public AttributeSet() {
 
 		}
 		internal AttributeSet Attrib(string key, string value) {
-			attributes [key] = value;
+			if (key != null && value != null) {
+				attributes [key] = value;
+			}
 			return this;
 		}
 		public AttributeSet Accept(string value) {return Attrib ("accept", value);}
 		public AttributeSet Action(string value) {return Attrib ("action", value);}
 		public AttributeSet Alt(string value) {return Attrib ("alt", value);}
 		public AttributeSet Enctype(MIME M) {return Attrib ("enctype", M.ToString());}
+		public AttributeSet Formaction(string value) {return Attrib ("formaction", value);}
 		public AttributeSet ID(string value) {return Attrib ("id", value);}
-		public AttributeSet Method(FormMethod value) {return Attrib ("method", value.ToString().ToLower());}
+		public AttributeSet Method(FormMethodT value) {return Attrib ("method", value.ToString().ToLower());}
 		public AttributeSet Name(string value) {return Attrib ("name", value);}
 		public AttributeSet Reference(string value) {return Attrib ("href", value);}
 		public AttributeSet Relationship(string value) {return Attrib ("rel", value);}
 		public AttributeSet Source(string value) {return Attrib ("src", value);}
 		public AttributeSet Title(string value) {return Attrib ("title", value);}
-		public AttributeSet Type(InputType value) {return Attrib ("type", value.ToString().ToLower());}
+		public AttributeSet InputType(InputT value) {return Attrib ("type", value.ToString().ToLower());}
 		public AttributeSet Value(string value) {return Attrib ("value", value);}
 		public virtual string GetPassonText(PassonStylesheet PS) {
-			return (Styleset != null ? String.Format(" class=\"{0}\"", String.Join("", PS[Styleset])) : String.Empty) + (Styles.Count > 0 ? String.Format(" style=\"{0}\"", (Styles.Count > 0 ? String.Join("", Styles) : String.Empty)) : String.Empty) + String.Join ("", attributes.Select((k) => String.Format(" {0}=\"{1}\"", k.Key, k.Value)));
+			return (Stylesets.Count > 0 ? String.Format(" class=\"{0}\"", String.Join(" ", Stylesets.Select(x => PS[x]))) : String.Empty) + (Styles.Count > 0 ? String.Format(" style=\"{0}\"", (Styles.Count > 0 ? String.Join("", Styles) : String.Empty)) : String.Empty) + String.Join ("", attributes.Select((k) => String.Format(" {0}=\"{1}\"", k.Key, k.Value)));
 			//return (Styleset != null ? String.Format(" class=\"{0}\"", PS[Styleset, elementtype]) : String.Empty) + (Styles.Count > 0 ? String.Format(" style=\"{0}\"", String.Join("", Styles)) : String.Empty) + String.Join ("", attributes.Select((k, v) => String.Format(" {0}=\"{1}\"", k, v)));
 		}
 		public override string ToString () {
-			return (Styles.Count > 0 || Styleset != null ? String.Format(" style=\"{0}\"", (Styles.Count > 0 ? String.Join("", Styles) : String.Empty) + (Styleset != null ? String.Join("", Styleset.Select((k) => String.Format("{0}:{1};", k.Key, k.Value))) : String.Empty)) : String.Empty) + String.Join ("", attributes.Select((k) => String.Format(" {0}=\"{1}\"", k.Key, k.Value)));
+			return (Styles.Count > 0 || Stylesets.Count > 0 ? String.Format(" style=\"{0}\"", (Styles.Count > 0 ? String.Join("", Styles) : String.Empty) + (Stylesets.Count > 0 ? String.Join("", Stylesets.SelectMany((k) => k.Select((s) => String.Format("{0}:{1};", s.Key, s.Value)))) : String.Empty)) : String.Empty) + String.Join ("", attributes.Select((k) => String.Format(" {0}=\"{1}\"", k.Key, k.Value)));
 		}
 	}
 
@@ -55,7 +59,9 @@ namespace WebSharp {
 		public List<Style> Styles = new List<Style>();
 		public AttributeSetA () {}
 		internal AttributeSetA Attrib(string key, string value) {
-			attributes [key] = value;
+			if (key != null && value != null) {
+				attributes [key] = value;
+			}
 			return this;
 		}
 		public AttributeSetA ID(string value) {return Attrib ("id", value);}
@@ -78,16 +84,18 @@ namespace WebSharp {
 		public ElementEmpty Action(string value) {this.Attributes.Action (value); return this;}
 		public ElementEmpty Alt(string value) {this.Attributes.Alt (value); return this;}
 		public ElementEmpty Enctype(MIME value) {this.Attributes.Enctype (value); return this;}
+		public ElementEmpty Formaction(string value) {this.Attributes.Formaction (value); return this;}
 		public ElementEmpty ID(string value) {this.Attributes.ID (value); return this;}
-		public ElementEmpty Method(AttributeSet.FormMethod value) {this.Attributes.Method (value); return this;}
+		public ElementEmpty Method(FormMethodT value) {this.Attributes.Method (value); return this;}
 		public ElementEmpty Name(string value) {this.Attributes.Name (value); return this;}
 		public ElementEmpty Reference(string value) {this.Attributes.Reference (value); return this;}
 		public ElementEmpty Relationship(string value) {this.Attributes.Relationship (value); return this;}
 		public ElementEmpty Source(string value) {this.Attributes.Source (value); return this;}
 		public ElementEmpty Title(string value) {this.Attributes.Title (value); return this;}
-		public ElementEmpty Type(AttributeSet.InputType value) {this.Attributes.Type (value); return this;}
+		public ElementEmpty InputType(InputT value) {this.Attributes.InputType (value); return this;}
 		public ElementEmpty Value(string value) {this.Attributes.Value (value); return this;}
-		public ElementEmpty SetStyleset(Styleset S) {this.Attributes.Styleset = S; return this;}
+		public ElementEmpty SetStyleset(Styleset S) {this.Attributes.Stylesets.Clear ();this.Attributes.Stylesets.Add(S); return this;}
+		public ElementEmpty AddStyleset(Styleset S) {this.Attributes.Stylesets.Add(S); return this;}
 		public ElementEmpty AddStyles(params Style[] S) {this.Attributes.Styles.AddRange (S);return this;}
 		public string ElementName { get{return name;} }
 		public ElementEmpty (string name) {
@@ -107,16 +115,18 @@ namespace WebSharp {
 		public ElementText Action(string value) {this.Attributes.Action (value); return this;}
 		public ElementText Alt(string value) {this.Attributes.Alt (value); return this;}
 		public ElementText Enctype(MIME value) {this.Attributes.Enctype (value); return this;}
+		public ElementText Formaction(string value) {this.Attributes.Formaction (value); return this;}
 		public ElementText ID(string value) {this.Attributes.ID (value); return this;}
-		public ElementText Method(AttributeSet.FormMethod value) {this.Attributes.Method (value); return this;}
+		public ElementText Method(FormMethodT value) {this.Attributes.Method (value); return this;}
 		public ElementText Name(string value) {this.Attributes.Name (value); return this;}
 		public ElementText Reference(string value) {this.Attributes.Reference (value); return this;}
 		public ElementText Relationship(string value) {this.Attributes.Relationship (value); return this;}
 		public ElementText Source(string value) {this.Attributes.Source (value); return this;}
 		public ElementText Title(string value) {this.Attributes.Title (value); return this;}
-		public ElementText Type(AttributeSet.InputType value) {this.Attributes.Type (value); return this;}
+		public ElementText InputType(InputT value) {this.Attributes.InputType (value); return this;}
 		public ElementText Value(string value) {this.Attributes.Value (value); return this;}
-		public ElementText SetStyleset(Styleset S) {this.Attributes.Styleset = S; return this;}
+		public ElementText SetStyleset(Styleset S) {this.Attributes.Stylesets.Clear ();this.Attributes.Stylesets.Add(S); return this;}
+		public ElementText AddStyleset(Styleset S) {this.Attributes.Stylesets.Add(S); return this;}
 		public ElementText AddStyles(params Style[] S) {this.Attributes.Styles.AddRange (S);return this;}
 		public string Text;
 		public string ElementName { get{return name;} }
@@ -138,16 +148,18 @@ namespace WebSharp {
 		public ElementContainer Action(string value) {this.Attributes.Action (value); return this;}
 		public ElementContainer Alt(string value) {this.Attributes.Alt (value); return this;}
 		public ElementContainer Enctype(MIME value) {this.Attributes.Enctype (value); return this;}
+		public ElementContainer Formaction(string value) {this.Attributes.Formaction (value); return this;}
 		public ElementContainer ID(string value) {this.Attributes.ID (value); return this;}
-		public ElementContainer Method(AttributeSet.FormMethod value) {this.Attributes.Method (value); return this;}
+		public ElementContainer Method(FormMethodT value) {this.Attributes.Method (value); return this;}
 		public ElementContainer Name(string value) {this.Attributes.Name (value); return this;}
 		public ElementContainer Reference(string value) {this.Attributes.Reference (value); return this;}
 		public ElementContainer Relationship(string value) {this.Attributes.Relationship (value); return this;}
 		public ElementContainer Source(string value) {this.Attributes.Source (value); return this;}
 		public ElementContainer Title(string value) {this.Attributes.Title (value); return this;}
-		public ElementContainer Type(AttributeSet.InputType value) {this.Attributes.Type (value); return this;}
+		public ElementContainer InputType(InputT value) {this.Attributes.InputType (value); return this;}
 		public ElementContainer Value(string value) {this.Attributes.Value (value); return this;}
-		public ElementContainer SetStyleset(Styleset S) {this.Attributes.Styleset = S; return this;}
+		public ElementContainer SetStyleset(Styleset S) {this.Attributes.Stylesets.Clear ();this.Attributes.Stylesets.Add(S); return this;}
+		public ElementContainer AddStyleset(Styleset S) {this.Attributes.Stylesets.Add(S); return this;}
 		public ElementContainer AddStyles(params Style[] S) {this.Attributes.Styles.AddRange (S);return this;}
 		public string ElementName { get{return name;} }
 		public ElementContainer (string name, params IElement[] contents) : base (contents) {
@@ -192,6 +204,18 @@ namespace WebSharp {
 			return String.Format ("<{0}{1}>{2}</{0}>", this.ElementName, this.Attributes.ToString(), this.element.ToString());
 		}
 	}
+	public class ButtonElement : ElementText {
+		ButtonT BT;
+		public ButtonElement(string text, ButtonT BT) : base("button", text) {
+			this.BT = BT;
+		}
+		public override string ToWebOptimizedString(PassonStylesheet PS) {
+			return String.Format ("<{0}{1} type=\"{3}\">{2}</{0}>", this.ElementName, this.Attributes.GetPassonText(PS), HttpUtility.HtmlEncode(this.Text), BT.ToString().ToLower());
+		}
+		public override string ToString () {
+			return String.Format ("<{0}{1} type=\"{3}\">{2}</{0}>", this.ElementName, this.Attributes.ToString(), HttpUtility.HtmlEncode(this.Text), BT.ToString().ToLower());
+		}
+	}
 	public static class HTML {
 		//END ABSTRACTS BEGIN SPECIALS
 		public static AttributeElement Attribute(IElement IE) {return new AttributeElement (IE);}
@@ -199,15 +223,16 @@ namespace WebSharp {
 		//END SPECIALS BEGIN EMPTIES
 		public static ElementEmpty Breakline () {return new ElementEmpty ("br");}
 		public static ElementEmpty Image(string src) {return new ElementEmpty ("img").Source(src);}
-		public static ElementEmpty Input (AttributeSet.InputType type, string name) {return new ElementEmpty ("input").Type (type).Name (name);}
-		public static ElementEmpty Input (AttributeSet.InputType type, string name, string value) {return new ElementEmpty ("input").Type (type).Name (name).Value (value);}
-		public static ElementEmpty FileInput (string name, string mimeaccept) {return new ElementEmpty ("input").Type (AttributeSet.InputType.File).Name (name).Accept (mimeaccept);}
-		public static ElementEmpty Submit(string name = "Submit") {return new ElementEmpty ("input").Type (AttributeSet.InputType.Submit).Value (name);}
+		public static ElementEmpty Input (InputT type, string name) {return new ElementEmpty ("input").InputType (type).Name (name);}
+		public static ElementEmpty Input (InputT type, string name, string value) {return new ElementEmpty ("input").InputType (type).Name (name).Value (value);}
+		public static ElementEmpty FileInput (string name, string mimeaccept) {return new ElementEmpty ("input").InputType (InputT.File).Name (name).Accept (mimeaccept);}
+		public static ElementEmpty Submit(string name = "Submit") {return new ElementEmpty ("input").InputType (InputT.Submit).Value (name);}
 		//END EMPTIES BEGIN TEXTS
+		public static ElementText Button(ButtonT B, string text) {return new ButtonElement (text, B);}
 		public static ElementText Span(string text) {return new ElementText ("span", text);}
 		//END TEXTS BEGIN CONTAINERS
 		public static ElementContainer Divider(params IElement[] contents) {return new ElementContainer ("div", contents);} 
-		public static ElementContainer Form(AttributeSet.FormMethod method, params IElement[] contents) { return new  ElementContainer ("form", contents).Method (method).Enctype (MIME.MultipartFormData); }
+		public static ElementContainer Form(FormMethodT method, params IElement[] contents) { ElementContainer F = new  ElementContainer ("form", contents).Method (method); if (method == FormMethodT.POST) {F.Enctype (MIME.MultipartFormData);} return F; }
 		//END CONTAINERS BEGIN STRUCTURES
 	}
 
