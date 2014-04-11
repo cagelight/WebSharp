@@ -39,11 +39,13 @@ namespace WebSharp {
 		}
 		public static MIME OctetStream = new MIME ("application", "octet-stream", "exe", "bin");
 		public static MIME FormData = new MIME ("application", "x-www-form-urlencoded");
+		public static MIME GIF = new MIME ("image", "gif", "gif");
 		public static MIME JPEG = new MIME ("image", "jpeg", "jpg", "jpeg");
 		public static MIME PNG = new MIME ("image", "png", "png");
 		public static MIME Icon = new MIME ("image", "x-icon", "ico");
 		public static MIME MultipartFormData = new MIME ("multipart", "form-data");
 		public static MIME HTML = new MIME ("text", "html", "htm", "html");
+		public static MIME Javascript = new MIME ("text", "javascript", "js");
 		public static MIME Plaintext = new MIME ("text", "plain", "txt");
 		private static readonly MIMEManager Manager = new MIMEManager();
 

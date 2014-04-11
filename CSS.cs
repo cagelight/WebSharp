@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 
 namespace WebSharp {
 	public class PassonStylesheet {
@@ -14,7 +15,7 @@ namespace WebSharp {
 		public string this[Styleset sset] {
 			get {
 				if (!setDict.ContainsKey(sset)) {
-					setDict [sset] = "C" + setDict.Count.ToString("X");
+					setDict [sset] = sset.Name == null ? "C" + setDict.Count : sset.Name;
 				}
 				return setDict [sset];
 			}
@@ -31,6 +32,12 @@ namespace WebSharp {
 				}
 				return aDict [aset];
 			}
+		}
+		public void ManualAdd(Styleset sset) {
+			setDict [sset] = sset.Name == null ? "C" + setDict.Count : sset.Name;
+		}
+		public void ManualAdd(AttributeStyleset aset) {
+			aDict [aset] = "A" + aDict.Count.ToString("X");
 		}
 		public List<string> GetFormattedSheet () {
 			List<string> sheet = new List<string> ();
@@ -83,6 +90,7 @@ namespace WebSharp {
 		}
 	}
 	public class Styleset : Dictionary<string, string> {
+		public string Name = null;
 		public Styleset(params Style[] styles) : base() {
 			foreach(Style S in styles) {
 				this [S.property] = S.value;
@@ -175,7 +183,11 @@ namespace WebSharp {
 		//BORDER AND OUTLINE
 		public static Style Border(int widthpx, Border s, Hexcolor c) {return new Style ("border", String.Format("{0}px {1} {2}", widthpx, s.ToString().ToLower(), c.ToString()));}
 		public static Style BorderRadius(int pxrad) {return new Style ("border-radius", pxrad+"px");}
-		public static Style BoxShadow(int xpx, int ypx, Hexcolor color, int blur = 0, int spread = 0, bool inset = false) {return new Style ("box-shadow", String.Format("{0}px {1}px{3}{4} {2}{5}", xpx, ypx, color.ToString(), blur!=0?" "+blur:String.Empty, spread!=0?" "+spread:String.Empty, inset?" inset":String.Empty));}
+		public static Style BorderTopLeftRadius(int pxrad) {return new Style ("border-top-left-radius", pxrad+"px");}
+		public static Style BorderTopRightRadius(int pxrad) {return new Style ("border-top-right-radius", pxrad+"px");}
+		public static Style BorderBottomLeftRadius(int pxrad) {return new Style ("border-bottom-left-radius", pxrad+"px");}
+		public static Style BorderBottomRightRadius(int pxrad) {return new Style ("border-bottom-right-radius", pxrad+"px");}
+		public static Style BoxShadow(int xpx, int ypx, Hexcolor color, int blur = 0, int spread = 0, bool inset = false) {return new Style ("box-shadow", String.Format("{0}px {1}px{3}{4} {2}{5}", xpx, ypx, color.ToString(), blur!=0?" "+blur+"px":String.Empty, spread!=0?" "+spread+"px":String.Empty, inset?" inset":String.Empty));}
 		//DIMENSION
 		public static Style Width(int px) {return new Style ("width", px+"px");}
 		public static Style Height(int px) {return new Style ("height", px+"px");}
@@ -241,13 +253,15 @@ namespace WebSharp {
 		public static Style Overflow(Overflow OS) {return new Style ("overflow", OS.ToString().ToLower());}
 		public static Style Position(Position PS) {return new Style ("position", PS.ToString().ToLower());}
 		public static Style Display(Display value) {return new Style ("display", DisplayDict[value]);}
-		public static Style VerticalAlign(string value) {return new Style ("v", value);}
+		public static Style VerticalAlign(string value) {return new Style ("vertical-align", value);}
+		public static Style ZIndex(int i) {return new Style ("z-index", i.ToString());}
 		//TEXT
 		public static Style Color(byte r, byte g, byte b) {return new Style ("color", new Hexcolor(r, g, b).ToString());}
 		public static Style Color(Hexcolor color) {return new Style ("color", color.ToString());}
 		public static Style Color(string hex) {return new Style ("color", hex.StartsWith("#") ? hex : "#" + hex);}
 		public static Style TextAlign(TextAlignment TA) {return new Style ("text-align", TA.ToString().ToLower());}
 		public static Style TextDecoration(string value) {return new Style ("text-decoration", value);}
+		public static Style TextShadow(int xpx, int ypx, int blur, Hexcolor color) {return new Style ("text-shadow", String.Format("{0}px {1}px {2}px {3}", xpx, ypx, blur, color.ToString()));}
 		//BEGIN STATIC STYLE HELPERS
 		internal static Dictionary<Repeat, string> RepeatDict = new Dictionary<Repeat, string>() {{Repeat.XY, "repeat"}, {Repeat.X, "repeat-x"}, {Repeat.Y, "repeat-y"}, {Repeat.None, "no-repeat"}};
 		internal static Dictionary<Display, string> DisplayDict = new Dictionary<Display, string>() {
